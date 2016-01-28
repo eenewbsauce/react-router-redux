@@ -1,35 +1,38 @@
-/* eslint-disable */
-const path = require('path');
+var path = require('path');
+var webpack = require('webpack');
+var ExtractTextPlugin = require('extract-text-webpack-plugin');
+
+var devFlagPlugin = new webpack.DefinePlugin({
+  __DEV__: JSON.stringify(JSON.parse(process.env.DEBUG || 'false'))
+});
 
 module.exports = {
-  entry: './js/index.js',
+  devtool: 'cheap-module-eval-source-map',
+  entry: [
+    'eventsource-polyfill',
+    'webpack-hot-middleware/client?path=/__webpack_hmr&timeout=20000',
+    './js/index.js'
+  ],
   output: {
-    path: path.join(__dirname, 'static'),
-    filename: 'bundle.js'
+    path: path.join(__dirname, 'dist'),
+    publicPath: '/static/',
+    filename: 'bundle.js',
+    hot: true
   },
+  plugins: [
+    new webpack.optimize.OccurenceOrderPlugin(),
+    new webpack.HotModuleReplacementPlugin(),
+    new webpack.NoErrorsPlugin(),
+    devFlagPlugin,
+    new ExtractTextPlugin('app.css')
+  ],
   module: {
-    loaders: [{
-      test: /\.js$/,
-      loader: 'babel',
-      exclude: /node_modules/,
-      include: __dirname
-    }]
+    loaders: [
+      { test: /\.js$/, loaders: ['babel'], exclude: /node_modules/ },
+      { test: /\.css$/, loader: ExtractTextPlugin.extract('css-loader?module!cssnext-loader') }
+    ]
+  },
+  resolve: {
+    extensions: ['', '.js', '.json']
   }
-}
-
-
-
-// This will make the redux-simpler-router module resolve to the
-// latest src instead of using it from npm. Remove this if running
-// outside of the source.
-var src = path.join(__dirname, '..', '..', 'src')
-var fs = require('fs')
-if (fs.existsSync(src)) {
-  // Use the latest src
-  module.exports.resolve = { alias: { 'react-router-redux': src } }
-  module.exports.module.loaders.push({
-    test: /\.js$/,
-    loaders: ['babel'],
-    include: src
-  });
-}
+};

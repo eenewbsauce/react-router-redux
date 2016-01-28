@@ -8,6 +8,7 @@ export function increase(n) {
 }
 
 export function decrease(n) {
+  //n = n + 1;
   return {
     type: DECREASE,
     amount: n
